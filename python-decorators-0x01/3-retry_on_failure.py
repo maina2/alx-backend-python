@@ -2,7 +2,7 @@ import time
 import sqlite3
 import functools
 
-# --- Decorator from previous task: with_db_connection ---
+
 def with_db_connection(func):
     """
     Decorator that opens a database connection, passes it to the decorated function,
@@ -23,16 +23,9 @@ def with_db_connection(func):
                 conn.close()
     return wrapper
 
-# --- New decorator: retry_on_failure ---
+# --- New decorator
 def retry_on_failure(retries=3, delay=1):
-    """
-    Decorator that retries the decorated function a specified number of times
-    if it raises an exception.
 
-    Args:
-        retries (int): The maximum number of times to retry the function.
-        delay (int): The delay in seconds between retries.
-    """
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -48,9 +41,9 @@ def retry_on_failure(retries=3, delay=1):
                         time.sleep(delay)
                     else:
                         print(f"Max retries ({retries}) exceeded. Raising exception.")
-                        raise # Re-raise the last exception if all retries fail
+                        raise 
         return wrapper
-    return decorator # This is important: the outer function returns the inner decorator
+    return decorator 
 
 @with_db_connection
 @retry_on_failure(retries=3, delay=1)
@@ -61,8 +54,7 @@ def fetch_users_with_retry(conn):
     """
     cursor = conn.cursor()
     
-    # Simulate a transient error for testing
-    # This error will occur on the first few calls, then succeed
+
     global CALL_COUNT # Use a global counter for simulation
     if not hasattr(fetch_users_with_retry, 'call_count'):
         fetch_users_with_retry.call_count = 0
@@ -75,7 +67,7 @@ def fetch_users_with_retry(conn):
     cursor.execute("SELECT * FROM users")
     return cursor.fetchall()
 
-# --- Setup for testing (create a dummy users.db if it doesn't exist) ---
+# --- Setup for testing 
 def setup_database():
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
@@ -95,7 +87,7 @@ def setup_database():
     conn.close()
 
 if __name__ == "__main__":
-    setup_database() # Ensure the database and some data exist
+    setup_database()
 
     print("--- Attempting to fetch users with automatic retry on failure ---")
     try:
