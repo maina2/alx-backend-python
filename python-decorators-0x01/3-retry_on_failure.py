@@ -25,7 +25,14 @@ def with_db_connection(func):
 
 # --- New decorator: retry_on_failure ---
 def retry_on_failure(retries=3, delay=1):
+    """
+    Decorator that retries the decorated function a specified number of times
+    if it raises an exception.
 
+    Args:
+        retries (int): The maximum number of times to retry the function.
+        delay (int): The delay in seconds between retries.
+    """
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -41,18 +48,22 @@ def retry_on_failure(retries=3, delay=1):
                         time.sleep(delay)
                     else:
                         print(f"Max retries ({retries}) exceeded. Raising exception.")
-                        raise 
+                        raise # Re-raise the last exception if all retries fail
         return wrapper
-    return decorator 
+    return decorator # This is important: the outer function returns the inner decorator
 
 @with_db_connection
 @retry_on_failure(retries=3, delay=1)
 def fetch_users_with_retry(conn):
-
+    """
+    Fetches all users from the database.
+    Includes a simulated transient error for testing retry logic.
+    """
     cursor = conn.cursor()
     
-
-    global CALL_COUNT 
+    # Simulate a transient error for testing
+    # This error will occur on the first few calls, then succeed
+    global CALL_COUNT # Use a global counter for simulation
     if not hasattr(fetch_users_with_retry, 'call_count'):
         fetch_users_with_retry.call_count = 0
     
