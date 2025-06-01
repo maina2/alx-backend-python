@@ -53,7 +53,6 @@ class TestGetJson(unittest.TestCase):
             """
             class that inherits from Mock
             """
-
             def json(self):
                 """
                 json returning a payload
@@ -66,13 +65,13 @@ class TestGetJson(unittest.TestCase):
 
 
 class TestMemoize(unittest.TestCase):
-    ''' memoize unittest '''
+    """ memoize unittest """
 
     def test_memoize(self):
-        ''' memoize test '''
+        """ memoize test """
 
         class TestClass:
-            ''' self descriptive'''
+            """ self descriptive """
 
             def a_method(self):
                 return 42
@@ -85,5 +84,8 @@ class TestMemoize(unittest.TestCase):
             spec = TestClass()
             spec.a_property
             spec.a_property
-            mocked.asset_called_once()
+            mocked.assert_called_once()
 
+
+if __name__ == "__main__":
+    unittest.main()
