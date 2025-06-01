@@ -57,4 +57,4 @@ python3 -c 'print(__import__("utils").access_nested_map.__doc__)'
 
 
 
-For further assistance or to contribute, please review the code and submit pull requests via GitHub.
+For further information or to contribute, please review the code and submit pull requests via GitHub.
