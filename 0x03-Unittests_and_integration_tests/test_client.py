@@ -2,7 +2,7 @@
 """Unit tests for client module.
 """
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, PropertyMock
 from parameterized import parameterized
 from client import GithubOrgClient
 from typing import Dict
@@ -51,8 +51,9 @@ class TestGithubOrgClient(unittest.TestCase):
             "repos_url": "https://api.github.com/orgs/test_org/repos",
             "type": "Organization"
         }
-        with patch('client.GithubOrgClient.org', new=Mock(return_value=test_payload)) as mock_org:
+        with patch('client.GithubOrgClient.org', new_callable=PropertyMock) as mock_org:
             print(f"Mock org setup: {mock_org.return_value}")
+            mock_org.return_value = test_payload
             client = GithubOrgClient("test_org")
             result = client._public_repos_url
             print(f"Result: {result}, Expected: {test_payload['repos_url']}")
