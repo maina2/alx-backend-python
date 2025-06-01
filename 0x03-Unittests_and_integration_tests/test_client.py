@@ -12,21 +12,19 @@ class TestGithubOrgClient(unittest.TestCase):
     """Test case for GithubOrgClient class.
     """
     @parameterized.expand([
-        ("google", {"login": "google"}),
-        ("abc", {"login": "abc"}),
+        ("google", {"login": "google", "repos_url": "https://api.github.com/orgs/google/repos"}),
+        ("abc", {"login": "abc", "repos_url": "https://api.github.com/orgs/abc/repos"}),
     ])
     @patch('client.get_json')
     def test_org(self, org_name: str, expected_payload: Dict, mock_get_json: Mock) -> None:
         """Test GithubOrgClient.org returns expected payload and calls get_json once."""
-        # Set up mock to return expected_payload when called
+        print(f"Testing org_name: {org_name}")
         mock_get_json.return_value = expected_payload
-        # Create GithubOrgClient instance
         client = GithubOrgClient(org_name)
-        # Call org property
         result = client.org
-        # Verify get_json was called once with correct URL
+        print(f"Mock called: {mock_get_json.called}, Call args: {mock_get_json.call_args}")
+        print(f"Result: {result}, Expected: {expected_payload}")
         mock_get_json.assert_called_once_with(f"https://api.github.com/orgs/{org_name}")
-        # Verify result matches expected payload
         self.assertEqual(result, expected_payload)
 
 
