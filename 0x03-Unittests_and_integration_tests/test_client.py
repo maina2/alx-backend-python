@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import patch, Mock
 from parameterized import parameterized
 from client import GithubOrgClient
+from utils import get_json
 from typing import Dict
 
 
@@ -15,7 +16,7 @@ class TestGithubOrgClient(unittest.TestCase):
         ("google", {"login": "google"}),
         ("abc", {"login": "abc"}),
     ])
-    @patch('client.get_json')
+    @patch('utils.get_json')
     def test_org(self, org_name: str, expected_payload: Dict, mock_get_json: Mock) -> None:
         """Test GithubOrgClient.org returns expected payload and calls get_json once."""
         mock_get_json.return_value = expected_payload
