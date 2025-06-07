@@ -36,7 +36,7 @@ class TestGithubOrgClient(unittest.TestCase):
             "type": "Organization"
         }
         with patch.object(GithubOrgClient, 'org',
-                         new_callable=PropertyMock) as mock_org:
+                          new_callable=PropertyMock) as mock_org:
             mock_org.return_value = test_payload
             client = GithubOrgClient("test_org")
             result = client._public_repos_url
@@ -95,7 +95,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         self.assertEqual(result, self.expected_repos)
 
     def test_public_repos_with_license(self):
-        """Test public_repos with license filter in integration context."""
+        """Test public_repos with license filter."""
         client = GithubOrgClient("google")
         result = client.public_repos(license="apache-2.0")
         self.assertEqual(result, self.apache2_repos)
