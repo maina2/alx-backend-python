@@ -1,0 +1,198 @@
+Messaging App API Test Cases
+
+1. Obtain JWT Token
+
+
+Endpoint: POST /api/token/
+
+
+
+Headers: Content-Type: application/json
+
+
+
+Body: {"username": "testuser", "password": "testpassword"}
+
+
+
+Expected Status: 200 OK
+
+
+
+Expected Response: JSON with access and refresh tokens
+
+
+
+Tested: Yes
+
+2. Create Conversation
+
+
+
+
+
+Endpoint: POST /api/conversations/
+
+
+
+Headers:
+
+
+
+
+
+Content-Type: application/json
+
+
+
+Authorization: Bearer {access_token}
+
+
+
+Body: {"participants": [1, 2]}
+
+
+
+Expected Status: 201 Created
+
+
+
+Expected Response: JSON with conversation details (id, participants)
+
+
+
+Tested: Yes
+
+3. Fetch Conversations
+
+
+
+
+
+Endpoint: GET /api/conversations/
+
+
+
+Headers: Authorization: Bearer {access_token}
+
+
+
+Expected Status: 200 OK
+
+
+
+Expected Response: JSON list of conversations for authenticated user
+
+
+
+Tested: Yes
+
+4. Fetch Conversations (Unauthorized)
+
+
+
+
+
+Endpoint: GET /api/conversations/
+
+
+
+Headers: None
+
+
+
+Expected Status: 401 Unauthorized
+
+
+
+Expected Response: JSON with error message
+
+
+
+Tested: Yes
+
+5. Send Message
+
+
+
+
+
+Endpoint: POST /api/conversations/{conversation_id}/messages/
+
+
+
+Headers:
+
+
+
+
+
+Content-Type: application/json
+
+
+
+Authorization: Bearer {access_token}
+
+
+
+Body: {"content": "Hello, test message!"}
+
+
+
+Expected Status: 201 Created
+
+
+
+Expected Response: JSON with message details (id, content, sent_at)
+
+
+
+Tested: Yes
+
+6. Fetch Messages
+
+
+
+
+
+Endpoint: GET /api/conversations/{conversation_id}/messages/
+
+
+
+Headers: Authorization: Bearer {access_token}
+
+
+
+Expected Status: 200 OK
+
+
+
+Expected Response: JSON list of messages in the conversation
+
+
+
+Tested: Yes
+
+7. Fetch Messages (Unauthorized)
+
+
+
+
+
+Endpoint: GET /api/conversations/{conversation_id}/messages/
+
+
+
+Headers: None
+
+
+
+Expected Status: 401 Unauthorized
+
+
+
+Expected Response: JSON with error message
+
+
+
+Tested: Yes
