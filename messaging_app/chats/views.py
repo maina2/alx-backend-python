@@ -2,8 +2,12 @@ from rest_framework import viewsets, status, filters
 from rest_framework.response import Response
 from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer
+from rest_framework.permissions import IsAuthenticated
+from .permissions import IsParticipant
 
 class ConversationViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated, IsParticipant]
+
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
     filter_backends = [filters.OrderingFilter]
@@ -17,6 +21,8 @@ class ConversationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 class MessageViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated, IsParticipant]
+
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     filter_backends = [filters.OrderingFilter]
