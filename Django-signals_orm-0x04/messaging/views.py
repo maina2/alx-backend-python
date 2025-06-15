@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.views.decorators.cache import cache_page
 from .models import Message
 
 @login_required
@@ -32,6 +33,7 @@ def delete_user(request):
     return render(request, 'messaging/delete_confirm.html')
 
 @login_required
+@cache_page(60)
 def conversation(request, user_id):
     """
     Displays threaded conversation between the current user and another user.
