@@ -7,12 +7,19 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     edited = models.BooleanField(default=False)  # Tracks if message was edited
+    parent_message = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
 
     class Meta:
-        ordering = ['-timestamp']
+        ordering = ['timestamp']
 
     def __str__(self):
         return f"Message from {self.sender.username} to {self.receiver.username}"
+
+    def get_threaded_replies(self):
+        """
+        Recursively fetches all replies to this message.
+        """
+        return self.replies.prefetch_related('sender', 'receiver', 'replies').all()
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')

@@ -30,3 +30,37 @@ def delete_user(request):
         messages.success(request, 'Your account has been deleted successfully.')
         return redirect('login')  # Redirect to login page after deletion
     return render(request, 'messaging/delete_confirm.html')
+
+@login_required
+def conversation(request, user_id):
+    """
+    Displays threaded conversation between the current user and another user.
+    """
+    other_user = get_object_or_404(User, id=user_id)
+    if request.user == other_user:
+        return render(request, 'messaging/error.html', {'error': 'You cannot message yourself.'})
+
+    # Fetch top-level messages (no parent) between the two users
+    messages = Message.objects.filter(
+        sender__in=[request.user, other_user],
+        receiver__in=[request.user, other_user],
+        parent_message__isnull=True
+    ).select_related('sender', 'receiver').prefetch_related('replies__sender', 'replies__receiver', 'replies__replies')
+
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        parent_id = request.POST.get('parent_id')
+        if content:
+            parent_message = Message.objects.get(id=parent_id) if parent_id else None
+            Message.objects.create(
+                sender=request.user,
+                receiver=other_user,
+                content=content,
+                parent_message=parent_message
+            )
+            return redirect('messaging:conversation', user_id=user_id)
+
+    return render(request, 'messaging/conversation.html', {
+        'other_user': other_user,
+        'messages': messages
+    })
