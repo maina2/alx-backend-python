@@ -37,6 +37,8 @@ def log_message_edit(sender, instance, **kwargs):
 @receiver(post_delete, sender=User)
 def cleanup_user_data(sender, instance, **kwargs):
     """
-    Deletes MessageHistory records where the user is the editor after user deletion.
+    Deletes MessageHistory records where the user is the editor and Messages where the user is sender or receiver after user deletion.
     """
+    Message.objects.filter(sender=instance).delete()
+    Message.objects.filter(receiver=instance).delete()
     MessageHistory.objects.filter(edited_by=instance).delete()
