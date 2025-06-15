@@ -64,3 +64,21 @@ def conversation(request, user_id):
         'other_user': other_user,
         'messages': messages
     })
+
+@login_required
+def inbox(request):
+    """
+    Displays unread messages for the current user.
+    """
+    unread_messages = Message.unread.unread_for_user(request.user)
+    if request.method == 'POST':
+        message_id = request.POST.get('message_id')
+        if message_id:
+            message = get_object_or_404(Message, id=message_id, receiver=request.user)
+            message.read = True
+            message.save()
+            return redirect('messaging:inbox')
+
+    return render(request, 'messaging/inbox.html', {
+        'unread_messages': unread_messages
+    })
