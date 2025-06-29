@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Step 1: Apply updated deployment with image v2.0
+echo "Applying updated blue deployment..."
+kubectl apply -f blue_deployment.yaml
+
+# Step 2: Monitor rollout status
+echo "Waiting for rolling update to complete..."
+kubectl rollout status deployment/messaging-app-blue
+
+# Step 3: Port-forward service to localhost
+kubectl port-forward service/messaging-app-service 8000:8000 &
+PORT_PID=$!
+sleep 3
+
+# Step 4: Send continuous curl requests in the background
+echo "Testing service for downtime..."
+for i in {1..20}; do
+    curl -s http://127.0.0.1:8000/ | grep -i "html\|error" || echo "No response"
+    sleep 1
+done
+
+# Step 5: Kill port-forwarding
+kill $PORT_PID
+
+# Step 6: Verify new pod is running
+echo "Current pods:"
+kubectl get pods -l app=messaging-app,version=blue
