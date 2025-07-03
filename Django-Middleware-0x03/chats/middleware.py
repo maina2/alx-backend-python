@@ -1,68 +1,25 @@
-from datetime import datetime, time, timedelta
 import logging
-import os
-from django.http import HttpResponseForbidden, HttpResponseTooManyRequests
-from django.core.cache import cache
-
-# Configure logging to file
-logging.basicConfig(
-    filename=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'requests.log'),
-    level=logging.INFO,
-    format='%(message)s'
-)
-logger = logging.getLogger(__name__)
-
-class OffensiveLanguageMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-        self.limit = 5  # 5 messages per minute
-        self.window = timedelta(minutes=1)
-
-    def __call__(self, request):
-        if request.method == 'POST' and 'messages' in request.path:
-            ip = request.META.get('REMOTE_ADDR')
-            cache_key = f'message_limit_{ip}'
-            
-            # Get current count and timestamp
-            count, timestamp = cache.get(cache_key, (0, datetime.now()))
-            
-            # Reset if window has passed
-            if datetime.now() - timestamp > self.window:
-                count = 0
-                timestamp = datetime.now()
-            
-            # Check limit
-            if count >= self.limit:
-                return HttpResponseTooManyRequests("Rate limit exceeded: 5 messages per minute")
-            
-            # Update count
-            cache.set(cache_key, (count + 1, timestamp), 60)  # Store for 60 seconds
-            
-        return self.get_response(request)
-
-
-class RolepermissionMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        # Check for admin or moderator access on specific actions
-        if request.method in ['DELETE'] and 'admin' in request.path:
-            user = request.user
-            if not user.is_authenticated or not (user.is_staff or user.is_superuser):
-                return HttpResponseForbidden("Access denied: Admin or moderator privileges required")
-        
-        return self.get_response(request)
+from datetime import datetime, time
+from django.http import HttpResponseForbidden
+import time
+from django.http import JsonResponse
+from collections import defaultdict, deque
 
 class RequestLoggingMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
+        self.logger = logging.getLogger('request_logger')
+        handler = logging.FileHandler('c:/Users/SYKO Electronics/Desktop/alx-backend-python/Django-Middleware-0x03/chats/requests.log')
+        formatter = logging.Formatter('%(message)s')
+        handler.setFormatter(formatter)
+        if not self.logger.hasHandlers():
+            self.logger.addHandler(handler)
+        self.logger.setLevel(logging.INFO)
 
     def __call__(self, request):
-        # Log the request details
-        user = request.user if hasattr(request, 'user') else 'Anonymous'
-        logger.info(f"{datetime.now()} - User: {user} - Path: {request.path}")
-
+        user = request.user if request.user.is_authenticated else 'Anonymous'
+        log_message = f"{datetime.now()} - User: {user} - Path: {request.path}"
+        self.logger.info(log_message)
         response = self.get_response(request)
         return response
 
@@ -72,9 +29,55 @@ class RestrictAccessByTimeMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        current_time = datetime.now().time()
-        # Restrict access between 9PM (21:00) and 6AM (06:00)
-        if time(21, 0) <= current_time or current_time <= time(6, 0):
-            return HttpResponseForbidden("Access denied: Service unavailable during these hours (9PM-6AM)")
-        
+        now = datetime.now().time()
+        start = time(18, 0)  # 6:00 PM
+        end = time(21, 0)    # 9:00 PM
+        if not (start <= now <= end):
+            return HttpResponseForbidden("Access to the messaging app is only allowed between 6PM and 9PM.")
         return self.get_response(request)
+
+
+class RolepermissionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, 'user', None)
+        if user is not None and user.is_authenticated:
+            # Check if user is admin (superuser or staff)
+            if user.is_superuser or user.is_staff:
+                return self.get_response(request)
+            # Check if user has 'moderator' group
+            if user.groups.filter(name='moderator').exists():
+                return self.get_response(request)
+            return HttpResponseForbidden('You do not have permission to perform this action (admin or moderator only).')
+        return HttpResponseForbidden('Authentication required.')
+
+
+class OffensiveLanguageMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.ip_message_times = defaultdict(deque)
+        self.limit = 5
+        self.window = 60  # seconds
+
+    def __call__(self, request):
+        if request.method == 'POST' and request.path.startswith('/chats/messages'):
+            ip = self.get_client_ip(request)
+            now = time.time()
+            times = self.ip_message_times[ip]
+            # Remove timestamps older than 1 minute
+            while times and now - times[0] > self.window:
+                times.popleft()
+            if len(times) >= self.limit:
+                return JsonResponse({'error': 'Message rate limit exceeded. Max 5 messages per minute.'}, status=429)
+            times.append(now)
+        return self.get_response(request)
+
+    def get_client_ip(self, request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
