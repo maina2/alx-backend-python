@@ -1,0 +1,167 @@
+{
+  "info": {
+    "name": "Messaging App API",
+    "_postman_id": "b83e7dd7-d3f9-4aa0-b8a2-1d8cf27c21ff",
+    "description": "Postman Collection to test Messaging App API with JWT Auth",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Register User",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"user1\",\n  \"password\": \"password123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/register/",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "register"]
+        }
+      }
+    },
+    {
+      "name": "Login - Get JWT Token",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"user1\",\n  \"password\": \"password123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/token/",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "token", ""]
+        }
+      }
+    },
+    {
+      "name": "Get Conversations",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/conversations/",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "conversations", ""]
+        }
+      }
+    },
+    {
+      "name": "Create Conversation",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"participants\": [1, 2]\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/conversations/",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "conversations", ""]
+        }
+      }
+    },
+    {
+      "name": "Send Message",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"conversation\": 1,\n  \"content\": \"Hello world!\"\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/messages/",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "messages", ""]
+        }
+      }
+    },
+    {
+      "name": "List Messages",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/messages/?conversation=1",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "messages", ""],
+          "query": [
+            {
+              "key": "conversation",
+              "value": "1"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "key": "jwt_token",
+      "value": ""
+    }
+  ]
+}
