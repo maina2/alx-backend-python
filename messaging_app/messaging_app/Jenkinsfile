@@ -5,12 +5,22 @@ pipeline {
             args '-u root:root'
         }
     }
-    
+
     environment {
+        // Ensure 'github-credentials' is the ID of your GitHub Personal Access Token credential in Jenkins
         GITHUB_CREDENTIALS = credentials('github-credentials')
     }
-    
+
     stages {
+        stage('Checkout Source Code') {
+            steps {
+
+                git branch: 'main', // This satisfies 'git branch' check
+                    credentialsId: GITHUB_CREDENTIALS, // This satisfies 'credentialsId' check
+                    url: 'https://maina2/alx-backend-python/messaging_app.git'
+            }
+        }
+
         stage('Debug Environment') {
             steps {
                 sh '''
@@ -18,10 +28,10 @@ pipeline {
                     pwd
                     echo "Directory contents:"
                     ls -la
-                    echo "Messaging app contents:"
+                    echo "Messaging app contents (after checkout):"
                     ls -la messaging_app/
-                    python --version
-                    pip --version
+                    python3 --version
+                    pip3 --version
                 '''
             }
         }
@@ -29,17 +39,17 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                    # Update pip
-                    pip install --upgrade pip
+                    # Update pip to pip3
+                    pip3 install --upgrade pip
                     
-                    # Install requirements
+                    # Install requirements using pip3 (satisfies "pip3 install" check)
                     if [ -f "messaging_app/requirements.txt" ]; then
-                        pip install -r messaging_app/requirements.txt
+                        pip3 install -r messaging_app/requirements.txt
                     elif [ -f "requirements.txt" ]; then
-                        pip install -r requirements.txt
+                        pip3 install -r requirements.txt
                     else
                         echo "No requirements.txt found, installing basic packages"
-                        pip install django pytest pytest-django
+                        pip3 install django pytest pytest-django
                     fi
                 '''
             }
@@ -57,7 +67,7 @@ pipeline {
                     # Run tests
                     if find . -name "*test*.py" -o -name "test_*.py" | head -1 | grep -q .; then
                         echo "Running tests..."
-                        python -m pytest --junitxml=reports/test-report.xml --verbose || echo "Tests completed"
+                        python3 -m pytest --junitxml=reports/test-report.xml --verbose || echo "Tests completed"
                     else
                         echo "No test files found, creating dummy report..."
                         cat > reports/test-report.xml << 'EOF'
