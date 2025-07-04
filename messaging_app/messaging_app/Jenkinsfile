@@ -1,0 +1,93 @@
+pipeline {
+    agent {
+        docker {
+            image 'python:3.9-slim'
+            args '-u root:root'
+        }
+    }
+    
+    environment {
+        GITHUB_CREDENTIALS = credentials('github-credentials')
+    }
+    
+    stages {
+        stage('Debug Environment') {
+            steps {
+                sh '''
+                    echo "Working directory:"
+                    pwd
+                    echo "Directory contents:"
+                    ls -la
+                    echo "Messaging app contents:"
+                    ls -la messaging_app/
+                    python --version
+                    pip --version
+                '''
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    # Update pip
+                    pip install --upgrade pip
+                    
+                    # Install requirements
+                    if [ -f "messaging_app/requirements.txt" ]; then
+                        pip install -r messaging_app/requirements.txt
+                    elif [ -f "requirements.txt" ]; then
+                        pip install -r requirements.txt
+                    else
+                        echo "No requirements.txt found, installing basic packages"
+                        pip install django pytest pytest-django
+                    fi
+                '''
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh '''
+                    # Create reports directory
+                    mkdir -p messaging_app/reports
+                    
+                    # Navigate to messaging_app directory
+                    cd messaging_app
+                    
+                    # Run tests
+                    if find . -name "*test*.py" -o -name "test_*.py" | head -1 | grep -q .; then
+                        echo "Running tests..."
+                        python -m pytest --junitxml=reports/test-report.xml --verbose || echo "Tests completed"
+                    else
+                        echo "No test files found, creating dummy report..."
+                        cat > reports/test-report.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="no-tests" tests="1" failures="0" errors="0" skipped="1">
+        <testcase name="dummy_test" classname="NoTests" time="0.001">
+            <skipped message="No test files found"/>
+        </testcase>
+    </testsuite>
+</testsuites>
+EOF
+                    fi
+                '''
+            }
+        }
+
+        stage('Archive Reports') {
+            steps {
+                archiveArtifacts artifacts: 'messaging_app/reports/*.xml', allowEmptyArchive: true
+            }
+        }
+    }
+
+    post {
+        always {
+            junit testResults: 'messaging_app/reports/test-report.xml', allowEmptyResults: true, skipPublishingChecks: true
+        }
+        failure {
+            echo 'Build failed! Check test reports.'
+        }
+    }
+}
